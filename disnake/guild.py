@@ -1019,7 +1019,7 @@ class Guild(Hashable):
             guild = await state.bot.fetch_guild(guild_id)
             state.refresh_guild_cache(guild)
         else:
-            guild = state.get_entry(guild_id)
+            guild = state.guild_cache.get_entry(guild_id)
 
         if not guild.icon:
             # Update cache if we don't have it
