@@ -643,7 +643,6 @@ class Interaction:
         """
         if self.response._responded:
             sender = self.followup.send
-            self.has_been_followed_up = True
         else:
             sender = self.response.send_message
         await sender(
@@ -660,6 +659,8 @@ class Interaction:
             suppress_embeds=suppress_embeds,
             delete_after=delete_after,
         )
+        if self.response._responded:
+            self.has_been_followed_up = True
 
 
 class InteractionResponse:
@@ -673,11 +674,13 @@ class InteractionResponse:
     __slots__: Tuple[str, ...] = (
         "_responded",
         "_parent",
+        "has_been_deferred"
     )
 
     def __init__(self, parent: Interaction):
         self._parent: Interaction = parent
         self._responded: bool = False
+        self.has_been_deferred: bool = False
 
     def is_done(self) -> bool:
         """Whether an interaction response has been done before.
@@ -729,6 +732,8 @@ class InteractionResponse:
         """
         if self._responded:
             raise InteractionResponded(self._parent)
+
+        self.has_been_deferred = True
 
         defer_type: Optional[InteractionResponseType] = None
         data: Dict[str, Any] = {}
