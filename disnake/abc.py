@@ -430,6 +430,7 @@ class GuildChannel(ABC):
 
     def _fill_overwrites(self, data: GuildChannelPayload) -> None:
         self._overwrites = []
+        return
         everyone_index = 0
         everyone_id = self.guild.id
 
