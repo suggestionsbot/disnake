@@ -45,6 +45,8 @@ from typing import (
     overload,
 )
 
+from disnake.embeds import EmptyEmbed
+
 from . import abc, utils
 from .app_commands import GuildApplicationCommandPermissions
 from .asset import Asset
@@ -1011,6 +1013,25 @@ class Guild(Hashable):
     def owner(self) -> Optional[Member]:
         """Optional[:class:`Member`]: Returns the member that owns the guild."""
         return self.get_member(self.owner_id)  # type: ignore
+
+    @classmethod
+    async def try_fetch_icon_url(cls, guild_id: int, state) -> Union[EmptyEmbed, str]:
+        """Given an id and state, return either the guilds icon or EmptyEmbed.
+
+        Returns EmptyEmbed instead of None due to Embed internals
+        """
+        if guild_id not in state.guild_cache:
+            guild = await state.bot.fetch_guild(guild_id)
+            state.refresh_guild_cache(guild)
+        else:
+            guild = state.get_entry(guild_id)
+
+        if not guild.icon:
+            # Update cache if we don't have it
+            guild = await state.bot.fetch_guild(guild_id)
+            state.refresh_guild_cache(guild)
+
+        return EmptyEmbed if not guild.icon else guild.icon.url
 
     @property
     def icon(self) -> Optional[Asset]:
