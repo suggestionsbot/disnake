@@ -1248,10 +1248,11 @@ class Message(Hashable):
     def thread(self) -> Optional[Thread]:
         """
         Optional[:class:`Thread`]: The thread started from this message. ``None`` if no thread has been started.
-
-        .. versionadded:: 2.4
         """
-        return self.guild and self.guild.get_thread(self.id)
+        if not isinstance(self.guild, Guild):
+            return None
+
+        return self.guild.get_thread(self.id)
 
     def is_system(self) -> bool:
         """Whether the message is a system message.
