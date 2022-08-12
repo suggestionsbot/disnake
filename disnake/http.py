@@ -2612,6 +2612,12 @@ class HTTPClient:
     ) -> Tuple[int, str, gateway.SessionStartLimit]:
         try:
             data: gateway.GatewayBot = await self.request(Route("GET", "/gateway/bot"))
+            _log.warning(
+                "%s total sessions, %s remaining. Reset in %s milliseconds",
+                data["session_start_limit"]["total"],
+                data["session_start_limit"]["remaining"],
+                data["session_start_limit"]["reset_after"],
+            )
         except HTTPException as exc:
             raise GatewayNotFound() from exc
 
