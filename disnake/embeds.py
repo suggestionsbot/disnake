@@ -857,3 +857,24 @@ class Embed:
 
         if len(self) > 6000:
             raise ValueError("Embed total size cannot be longer than 6000 characters")
+
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+
+        return (
+            self.title == other.title
+            and self.type == other.type
+            and self.description == other.description
+            and self.url == other.url
+            and self.timestamp == other.timestamp
+            and self.color == other.color
+            and self.thumbnail == other.thumbnail
+            and self.video == other.video
+            and self.provider == other.provider
+            and self.author == other.author
+            and self.image == other.image
+            and self.footer == other.footer
+            and self.fields == other.fields
+            and self._files == other._files
+        )
