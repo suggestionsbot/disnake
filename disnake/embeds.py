@@ -69,7 +69,7 @@ class EmbedProxy:
         if not isinstance(other, type(self)):
             return False
 
-        return self.__dict == other.__dict__
+        return self.__dict__ == other.__dict__
 
 
 if TYPE_CHECKING:
