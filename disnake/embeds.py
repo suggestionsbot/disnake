@@ -65,6 +65,12 @@ class EmbedProxy:
     def __getattr__(self, attr: str) -> None:
         return None
 
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+
+        return self.__dict == other.__dict__
+
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -863,9 +869,11 @@ class Embed:
             return False
 
         if (self.timestamp and other.timestamp) or (not self.timestamp and not other.timestamp):
+            # We do this as its unlikely the timestamps are exactly the same
+            # although we could do a time based window check here instead
             timestamp_check = True
         else:
-            timestamp_check=False
+            timestamp_check = False
 
         return (
             self.title == other.title
