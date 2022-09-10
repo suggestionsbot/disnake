@@ -862,12 +862,17 @@ class Embed:
         if not isinstance(other, type(self)):
             return False
 
+        if (self.timestamp and other.timestamp) or (not self.timestamp and not other.timestamp):
+            timestamp_check = True
+        else:
+            timestamp_check=False
+
         return (
             self.title == other.title
             and self.type == other.type
             and self.description == other.description
             and self.url == other.url
-            and self.timestamp == other.timestamp
+            and timestamp_check
             and self.color == other.color
             and self.thumbnail == other.thumbnail
             and self.video == other.video
