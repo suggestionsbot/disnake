@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Set
 
 import disnake
 
@@ -275,4 +275,6 @@ class AutoShardedInteractionBot(InteractionBotBase, disnake.AutoShardedClient):
     :class:`disnake.AutoShardedClient` instead.
     """
 
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.guild_ids: Set[int] = self._connection.guild_ids
