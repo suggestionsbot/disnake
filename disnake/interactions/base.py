@@ -168,9 +168,11 @@ class Interaction:
         "_cs_channel",
         "_cs_me",
         "_cs_expires_at",
+        'has_been_followed_up'
     )
 
     def __init__(self, *, data: InteractionPayload, state: ConnectionState) -> None:
+        self.has_been_followed_up: bool = False
         self.data: Mapping[str, Any] = data.get("data") or {}
         self._state: ConnectionState = state
         # TODO: Maybe use a unique session
@@ -206,6 +208,14 @@ class Interaction:
             self._permissions = int(member.get("permissions", 0))
         elif user := data.get("user"):
             self.author = self._state.store_user(user)
+
+    @property
+    def deferred_without_send(self) -> bool:
+        """Is the bot is currently 'thinking' still"""
+        if self.response.has_been_deferred and self.has_been_followed_up:
+            return False
+
+        return True
 
     @property
     def bot(self) -> AnyBot:
@@ -683,6 +693,7 @@ class Interaction:
             suppress_embeds=suppress_embeds,
             delete_after=delete_after,
         )
+        self.has_been_followed_up = True
 
 
 class InteractionResponse:
@@ -696,10 +707,12 @@ class InteractionResponse:
     __slots__: Tuple[str, ...] = (
         "_parent",
         "_response_type",
+        "has_been_deferred"
     )
 
     def __init__(self, parent: Interaction) -> None:
         self._parent: Interaction = parent
+        self.has_been_deferred: bool = False
         self._response_type: Optional[InteractionResponseType] = None
 
     @property
@@ -773,6 +786,8 @@ class InteractionResponse:
         """
         if self._response_type is not None:
             raise InteractionResponded(self._parent)
+
+        self.has_been_deferred = True
 
         defer_type: Optional[InteractionResponseType] = None
         data: Dict[str, Any] = {}

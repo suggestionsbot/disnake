@@ -26,7 +26,7 @@ from typing import (
     TypeVar,
     Union,
     cast,
-    overload,
+    overload, Set,
 )
 
 from . import utils
@@ -202,6 +202,7 @@ class ConnectionState:
         chunk_guilds_at_startup: Optional[bool] = None,
         member_cache_flags: Optional[MemberCacheFlags] = None,
     ) -> None:
+        self.guild_ids: Set[int] = set()
         self.loop: asyncio.AbstractEventLoop = loop
         self.http: HTTPClient = http
         self.max_messages: Optional[int] = max_messages
@@ -1411,63 +1412,69 @@ class ConnectionState:
             self.dispatch("guild_join", guild)
 
     def parse_guild_create(self, data: gateway.GuildCreateEvent) -> None:
-        unavailable = data.get("unavailable")
-        if unavailable is True:
-            # joined a guild with unavailable == True so..
-            return
+        self.guild_ids.add(int(data["id"]))
 
-        guild = self._get_create_guild(data)
-
-        try:
-            # Notify the on_ready state, if any, that this guild is complete.
-            self._ready_state.put_nowait(guild)
-        except AttributeError:
-            pass
-        else:
-            # If we're waiting for the event, put the rest on hold
-            return
-
-        # check if it requires chunking
-        if self._guild_needs_chunking(guild):
-            asyncio.create_task(self._chunk_and_dispatch(guild, unavailable))
-            return
-
-        # Dispatch available if newly available
-        if unavailable is False:
-            self.dispatch("guild_available", guild)
-        else:
-            self.dispatch("guild_join", guild)
+        # unavailable = data.get("unavailable")
+        # if unavailable is True:
+        #     # joined a guild with unavailable == True so..
+        #     return
+        #
+        # guild = self._get_create_guild(data)
+        #
+        # try:
+        #     # Notify the on_ready state, if any, that this guild is complete.
+        #     self._ready_state.put_nowait(guild)
+        # except AttributeError:
+        #     pass
+        # else:
+        #     # If we're waiting for the event, put the rest on hold
+        #     return
+        #
+        # # check if it requires chunking
+        # if self._guild_needs_chunking(guild):
+        #     asyncio.create_task(self._chunk_and_dispatch(guild, unavailable))
+        #     return
+        #
+        # # Dispatch available if newly available
+        # if unavailable is False:
+        #     self.dispatch("guild_available", guild)
+        # else:
+        #     self.dispatch("guild_join", guild)
 
     def parse_guild_update(self, data: gateway.GuildUpdateEvent) -> None:
-        guild = self._get_guild(int(data["id"]))
-        if guild is not None:
-            old_guild = copy.copy(guild)
-            guild._from_data(data)
-            self.dispatch("guild_update", old_guild, guild)
-        else:
-            _log.debug("GUILD_UPDATE referencing an unknown guild ID: %s. Discarding.", data["id"])
+        return
+        # Removing this event parsing as we ripped out the guild cache
+        # guild = self._get_guild(int(data["id"]))
+        # if guild is not None:
+        #     old_guild = copy.copy(guild)
+        #     guild._from_data(data)
+        #     self.dispatch("guild_update", old_guild, guild)
+        # else:
+        #     _log.debug("GUILD_UPDATE referencing an unknown guild ID: %s. Discarding.", data["id"])
 
     def parse_guild_delete(self, data: gateway.GuildDeleteEvent) -> None:
-        guild = self._get_guild(int(data["id"]))
-        if guild is None:
-            _log.debug("GUILD_DELETE referencing an unknown guild ID: %s. Discarding.", data["id"])
-            return
+        self.guild_ids.discard(int(data["id"]))
 
-        if data.get("unavailable", False):
-            # GUILD_DELETE with unavailable being True means that the
-            # guild that was available is now currently unavailable
-            guild.unavailable = True
-            self.dispatch("guild_unavailable", guild)
-            return
-
-        # do a cleanup of the messages cache
-        if self._messages is not None:
-            self._messages: Optional[Deque[Message]] = deque(
-                (msg for msg in self._messages if msg.guild != guild), maxlen=self.max_messages
-            )
-
-        self._remove_guild(guild)
-        self.dispatch("guild_remove", guild)
+        # guild = self._get_guild(int(data["id"]))
+        # if guild is None:
+        #     _log.debug("GUILD_DELETE referencing an unknown guild ID: %s. Discarding.", data["id"])
+        #     return
+        #
+        # if data.get("unavailable", False):
+        #     # GUILD_DELETE with unavailable being True means that the
+        #     # guild that was available is now currently unavailable
+        #     guild.unavailable = True
+        #     self.dispatch("guild_unavailable", guild)
+        #     return
+        #
+        # # do a cleanup of the messages cache
+        # if self._messages is not None:
+        #     self._messages: Optional[Deque[Message]] = deque(
+        #         (msg for msg in self._messages if msg.guild != guild), maxlen=self.max_messages
+        #     )
+        #
+        # self._remove_guild(guild)
+        # self.dispatch("guild_remove", guild)
 
     def parse_guild_ban_add(self, data: gateway.GuildBanAddEvent) -> None:
         # we make the assumption that GUILD_BAN_ADD is done
@@ -1492,157 +1499,62 @@ class ConnectionState:
             self.dispatch("member_unban", guild, user)
 
     def parse_guild_role_create(self, data: gateway.GuildRoleCreateEvent) -> None:
-        guild = self._get_guild(int(data["guild_id"]))
-        if guild is None:
-            _log.debug(
-                "GUILD_ROLE_CREATE referencing an unknown guild ID: %s. Discarding.",
-                data["guild_id"],
-            )
-            return
-
-        role_data = data["role"]
-        role = Role(guild=guild, data=role_data, state=self)
-        guild._add_role(role)
-        self.dispatch("guild_role_create", role)
+        return
+        # Removing this event parsing as we ripped out the guild cache
+        # guild = self._get_guild(int(data["guild_id"]))
+        # if guild is None:
+        #     _log.debug(
+        #         "GUILD_ROLE_CREATE referencing an unknown guild ID: %s. Discarding.",
+        #         data["guild_id"],
+        #     )
+        #     return
+        #
+        # role_data = data["role"]
+        # role = Role(guild=guild, data=role_data, state=self)
+        # guild._add_role(role)
+        # self.dispatch("guild_role_create", role)
 
     def parse_guild_role_delete(self, data: gateway.GuildRoleDeleteEvent) -> None:
-        guild = self._get_guild(int(data["guild_id"]))
-        if guild is not None:
-            role_id = int(data["role_id"])
-            try:
-                role = guild._remove_role(role_id)
-            except KeyError:
-                return
-            else:
-                self.dispatch("guild_role_delete", role)
-        else:
-            _log.debug(
-                "GUILD_ROLE_DELETE referencing an unknown guild ID: %s. Discarding.",
-                data["guild_id"],
-            )
+        return
+        # Removing this event parsing as we ripped out the guild cache
 
     def parse_guild_role_update(self, data: gateway.GuildRoleUpdateEvent) -> None:
-        guild = self._get_guild(int(data["guild_id"]))
-        if guild is not None:
-            role_data = data["role"]
-            role_id = int(role_data["id"])
-            role = guild.get_role(role_id)
-            if role is not None:
-                old_role = copy.copy(role)
-                role._update(role_data)
-                self.dispatch("guild_role_update", old_role, role)
-        else:
-            _log.debug(
-                "GUILD_ROLE_UPDATE referencing an unknown guild ID: %s. Discarding.",
-                data["guild_id"],
-            )
+        return
+        # Removing this event parsing as we ripped out the guild cache
 
     def parse_guild_scheduled_event_create(
         self, data: gateway.GuildScheduledEventCreateEvent
     ) -> None:
-        scheduled_event = GuildScheduledEvent(state=self, data=data)
-        guild = scheduled_event.guild
-        if guild is not None:
-            guild._scheduled_events[scheduled_event.id] = scheduled_event
-        self.dispatch("guild_scheduled_event_create", scheduled_event)
+        return
+        # Removing this event parsing as we ripped out the guild cache
 
     def parse_guild_scheduled_event_update(
         self, data: gateway.GuildScheduledEventUpdateEvent
     ) -> None:
-        guild = self._get_guild(int(data["guild_id"]))
-
-        if guild is None:
-            _log.debug(
-                "GUILD_SCHEDULED_EVENT_UPDATE referencing unknown guild ID: %s. Discarding.",
-                data["guild_id"],
-            )
-            return
-
-        scheduled_event = guild._scheduled_events.get(int(data["id"]))
-        if scheduled_event is not None:
-            old_scheduled_event = copy.copy(scheduled_event)
-            scheduled_event._update(data)
-            self.dispatch("guild_scheduled_event_update", old_scheduled_event, scheduled_event)
-
-        else:
-            _log.debug(
-                "GUILD_SCHEDULED_EVENT_UPDATE referencing "
-                "unknown scheduled event ID: %s. Discarding.",
-                data["id"],
-            )
+        return
+        # Removing this event parsing as we ripped out the guild cache
 
     def parse_guild_scheduled_event_delete(
         self, data: gateway.GuildScheduledEventDeleteEvent
     ) -> None:
-        scheduled_event = GuildScheduledEvent(state=self, data=data)
-        guild = scheduled_event.guild
-        if guild is not None:
-            guild._scheduled_events.pop(scheduled_event.id, None)
-        self.dispatch("guild_scheduled_event_delete", scheduled_event)
+        return
+        # Removing this event parsing as we ripped out the guild cache
 
     def parse_guild_scheduled_event_user_add(
         self, data: gateway.GuildScheduledEventUserAddEvent
     ) -> None:
-        payload = RawGuildScheduledEventUserActionEvent(data)
-        self.dispatch("raw_guild_scheduled_event_subscribe", payload)
-        guild = self._get_guild(payload.guild_id)
-        if guild is None:
-            return
-
-        event = guild.get_scheduled_event(payload.event_id)
-        user = guild.get_member(payload.user_id)
-        if user is None:
-            user = self.get_user(payload.user_id)
-
-        if event is not None and user is not None:
-            self.dispatch("guild_scheduled_event_subscribe", event, user)
+        return
+        # Removing this event parsing as we ripped out the guild cache
 
     def parse_guild_scheduled_event_user_remove(
         self, data: gateway.GuildScheduledEventUserRemoveEvent
     ) -> None:
-        payload = RawGuildScheduledEventUserActionEvent(data)
-        self.dispatch("raw_guild_scheduled_event_unsubscribe", payload)
-        guild = self._get_guild(payload.guild_id)
-        if guild is None:
-            return
-
-        event = guild.get_scheduled_event(payload.event_id)
-        user = guild.get_member(payload.user_id)
-        if user is None:
-            user = self.get_user(payload.user_id)
-
-        if event is not None and user is not None:
-            self.dispatch("guild_scheduled_event_unsubscribe", event, user)
+        return
+        # Removing this event parsing as we ripped out the guild cache
 
     def parse_guild_members_chunk(self, data: gateway.GuildMembersChunkEvent) -> None:
-        guild_id = int(data["guild_id"])
-        guild = self._get_guild(guild_id)
-        # This should never happen, but it's handled just in case
-        if guild is None:
-            _log.debug(
-                "GUILD_MEMBERS_CHUNK referencing unknown guild ID: %s. Discarding.",
-                data["guild_id"],
-            )
-            return
-
-        presences = data.get("presences", [])
-
-        members = [
-            Member(guild=guild, data=member, state=self) for member in data.get("members", [])
-        ]
-        _log.debug("Processed a chunk for %s members in guild ID %s.", len(members), guild_id)
-
-        if presences:
-            member_dict = {member.id: member for member in members}
-            for presence in presences:
-                user = presence["user"]
-                member_id = int(user["id"])
-                member = member_dict.get(member_id)
-                if member is not None:
-                    member._presence_update(presence, user)
-
-        complete = data.get("chunk_index", 0) + 1 == data.get("chunk_count")
-        self.process_chunk_requests(guild_id, data.get("nonce"), members, complete)
+        return
+        # Removing this event parsing as we ripped out the guild cache
 
     def parse_guild_integrations_update(self, data: gateway.GuildIntegrationsUpdateEvent) -> None:
         guild = self._get_guild(int(data["guild_id"]))

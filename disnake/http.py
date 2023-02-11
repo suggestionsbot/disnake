@@ -2665,6 +2665,13 @@ class HTTPClient:
         except HTTPException as exc:
             raise GatewayNotFound() from exc
 
+        _log.warning(
+            "%s total sessions, %s remaining. Reset in %s milliseconds",
+            data["session_start_limit"]["total"],
+            data["session_start_limit"]["remaining"],
+            data["session_start_limit"]["reset_after"],
+        )
+
         return (
             data["shards"],
             self._format_gateway_url(data["url"], encoding=encoding, zlib=zlib),

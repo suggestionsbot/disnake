@@ -471,6 +471,10 @@ class AutoShardedInteractionBot(InteractionBotBase, disnake.AutoShardedClient):
     :class:`disnake.AutoShardedClient` instead.
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.guild_ids: Set[int] = self._connection.guild_ids
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -509,3 +513,4 @@ class AutoShardedInteractionBot(InteractionBotBase, disnake.AutoShardedClient):
             strict_localization: bool = False,
         ) -> None:
             ...
+
