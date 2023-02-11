@@ -23,7 +23,6 @@ from typing import (
     overload,
 )
 
-from disnake.embeds import EmptyEmbed
 
 from . import abc, utils
 from .app_commands import GuildApplicationCommandPermissions
@@ -690,7 +689,7 @@ class Guild(Hashable):
         return self.get_member(self_id)  # type: ignore
 
     @classmethod
-    async def try_fetch_icon_url(cls, guild_id: int, state) -> Union[EmptyEmbed, str]:
+    async def try_fetch_icon_url(cls, guild_id: int, state) -> Union[None, str]:
         """Given an id and state, return either the guilds icon or EmptyEmbed.
         Returns EmptyEmbed instead of None due to Embed internals
         """
@@ -705,7 +704,7 @@ class Guild(Hashable):
             guild = await state.bot.fetch_guild(guild_id)
             state.refresh_guild_cache(guild)
 
-        return EmptyEmbed if not guild.icon else guild.icon.url
+        return None if not guild.icon else guild.icon.url
 
 
 
