@@ -707,12 +707,14 @@ class InteractionResponse:
     __slots__: Tuple[str, ...] = (
         "_parent",
         "_response_type",
-        "has_been_deferred"
+        "has_been_deferred",
+        "_responded",
     )
 
     def __init__(self, parent: Interaction) -> None:
         self._parent: Interaction = parent
         self.has_been_deferred: bool = False
+        self._responded: bool = False # Backwards compat for DisnakePaginator
         self._response_type: Optional[InteractionResponseType] = None
 
     @property
@@ -1005,6 +1007,7 @@ class InteractionResponse:
                 data=payload,
                 files=files or None,
             )
+            self._responded = True
         except NotFound as e:
             if e.code == 10062:
                 raise InteractionTimedOut(self._parent) from e
