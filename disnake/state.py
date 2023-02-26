@@ -572,12 +572,13 @@ class ConnectionState:
         )
 
     def _add_guild_from_data(self, data: Union[GuildPayload, UnavailableGuildPayload]) -> Guild:
-        guild = Guild(
-            data=data,  # type: ignore  # may be unavailable guild
-            state=self,
-        )
-        self._add_guild(guild)
-        return guild
+        return None # noqa
+        # guild = Guild(
+        #     data=data,  # type: ignore  # may be unavailable guild
+        #     state=self,
+        # )
+        # self._add_guild(guild)
+        # return guild
 
     def _guild_needs_chunking(self, guild: Guild) -> bool:
         # If presences are enabled then we get back the old guild.large behaviour
