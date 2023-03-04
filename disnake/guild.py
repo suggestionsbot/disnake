@@ -706,8 +706,6 @@ class Guild(Hashable):
 
         return None if not guild.icon else guild.icon.url
 
-
-
     @property
     def voice_client(self) -> Optional[VoiceProtocol]:
         """Optional[:class:`VoiceProtocol`]: Returns the :class:`VoiceProtocol` associated with this guild, if any."""

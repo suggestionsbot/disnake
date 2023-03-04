@@ -513,4 +513,3 @@ class AutoShardedInteractionBot(InteractionBotBase, disnake.AutoShardedClient):
             strict_localization: bool = False,
         ) -> None:
             ...
-

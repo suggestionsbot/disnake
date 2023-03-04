@@ -168,7 +168,7 @@ class Interaction:
         "_cs_channel",
         "_cs_me",
         "_cs_expires_at",
-        'has_been_followed_up'
+        "has_been_followed_up",
     )
 
     def __init__(self, *, data: InteractionPayload, state: ConnectionState) -> None:
@@ -714,7 +714,7 @@ class InteractionResponse:
     def __init__(self, parent: Interaction) -> None:
         self._parent: Interaction = parent
         self.has_been_deferred: bool = False
-        self._responded: bool = False # Backwards compat for DisnakePaginator
+        self._responded: bool = False  # Backwards compat for DisnakePaginator
         self._response_type: Optional[InteractionResponseType] = None
 
     @property

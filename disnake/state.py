@@ -26,7 +26,8 @@ from typing import (
     TypeVar,
     Union,
     cast,
-    overload, Set,
+    overload,
+    Set,
 )
 
 from . import utils
@@ -572,7 +573,7 @@ class ConnectionState:
         )
 
     def _add_guild_from_data(self, data: Union[GuildPayload, UnavailableGuildPayload]) -> Guild:
-        return None # noqa
+        return None  # noqa
         # guild = Guild(
         #     data=data,  # type: ignore  # may be unavailable guild
         #     state=self,

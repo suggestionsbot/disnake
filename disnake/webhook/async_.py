@@ -34,7 +34,7 @@ from ..channel import PartialMessageable
 from ..enums import WebhookType, try_enum
 from ..errors import DiscordServerError, Forbidden, HTTPException, NotFound, WebhookTokenMissing
 from ..flags import MessageFlags
-from ..http import Route, set_attachments, to_multipart, to_multipart_with_attachments
+from ..http import Route, set_attachments, to_multipart, to_multipart_with_attachments, USER_AGENT
 from ..message import Message
 from ..mixins import Hashable
 from ..ui.action_row import MessageUIComponent, components_to_dict
@@ -121,6 +121,7 @@ class AsyncWebhookAdapter:
         except KeyError:
             self._locks[bucket] = lock = asyncio.Lock()
 
+        headers["User-Agent"] = USER_AGENT
         if payload is not None:
             headers["Content-Type"] = "application/json"
             to_send = utils._to_json(payload)

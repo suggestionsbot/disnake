@@ -19,7 +19,7 @@ from urllib.parse import quote as urlquote
 from .. import utils
 from ..channel import PartialMessageable
 from ..errors import DiscordServerError, Forbidden, HTTPException, NotFound, WebhookTokenMissing
-from ..http import Route
+from ..http import Route, USER_AGENT
 from ..message import Message
 from .async_ import BaseWebhook, _WebhookState, handle_message_parameters
 
@@ -97,6 +97,7 @@ class WebhookAdapter:
         except KeyError:
             self._locks[bucket] = lock = threading.Lock()
 
+        headers["User-Agent"] = USER_AGENT
         if payload is not None:
             headers["Content-Type"] = "application/json"
             to_send = utils._to_json(payload)

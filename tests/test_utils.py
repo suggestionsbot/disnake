@@ -428,10 +428,10 @@ def test_utcnow():
 
 
 def test_valid_icon_size():
-    for s in (2**x for x in range(4, 13)):
+    for s in (2 ** x for x in range(4, 13)):
         assert utils.valid_icon_size(s)
 
-    for s in [0, 1, 2, 8, 24, 100, 2**20]:
+    for s in [0, 1, 2, 8, 24, 100, 2 ** 20]:
         assert not utils.valid_icon_size(s)
 
 
