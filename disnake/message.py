@@ -861,6 +861,7 @@ class Message(Hashable):
         "stickers",
         "components",
         "guild",
+        "_thread"
     )
 
     if TYPE_CHECKING:
@@ -926,9 +927,9 @@ class Message(Hashable):
         except AttributeError:
             self.guild = state._get_guild(utils._get_as_snowflake(data, "guild_id"))
 
+        self._thread: Optional[Thread] = None
         if thread_data := data.get("thread"):
-            if not self.thread and isinstance(self.guild, Guild):
-                self.guild._store_thread(thread_data)
+            self._thread = Thread(guild=self.guild, state=self._state, data=thread_data)
 
         try:
             ref = data["message_reference"]
@@ -1243,10 +1244,7 @@ class Message(Hashable):
 
         .. versionadded:: 2.4
         """
-        if not isinstance(self.guild, Guild):
-            return None
-
-        return self.guild.get_thread(self.id)
+        return self._thread
 
     def is_system(self) -> bool:
         """Whether the message is a system message.
