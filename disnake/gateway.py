@@ -537,7 +537,6 @@ class DiscordWebSocket:
 
         await self.send_as_json(payload)
         _log.info("Shard ID %s has sent the RESUME payload.", self.shard_id)
-        _log.warning("Shard ID %s has sent the RESUME payload. %s", self.shard_id, payload)
 
     async def received_message(self, raw_msg: Union[str, bytes], /) -> None:
         if isinstance(raw_msg, bytes):
